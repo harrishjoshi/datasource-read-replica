@@ -5,6 +5,7 @@ import org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -40,6 +41,12 @@ public class HikariCPService {
     @Value("${spring.datasource.hikari.connection-test-query}")
     private String connectionTestQuery;
 
+    private final Environment env;
+
+    public HikariCPService(Environment env) {
+        this.env = env;
+    }
+
     public HikariDataSource getHikariDataSource(String url) {
         var dataSource = DataSourceBuilder.create()
                 .type(HikariDataSource.class)
@@ -63,6 +70,12 @@ public class HikariCPService {
         var props = new HashMap<String, Object>();
         props.put("hibernate.physical_naming_strategy", CamelCaseToUnderscoresNamingStrategy.class.getName());
         props.put("hibernate.implicit_naming_strategy", SpringImplicitNamingStrategy.class.getName());
+        props.put("hibernate.dialect", env.getProperty("spring.jpa.properties.hibernate.dialect"));
+        props.put("hibernate.jdbc.batch_size", env.getProperty("spring.jpa.properties.hibernate.jdbc.batch_size"));
+        props.put("hibernate.ddl-auto", env.getProperty("spring.jpa.hibernate.ddl-auto"));
+        props.put("hibernate.show-sql", env.getProperty("spring.jpa.hibernate.show-sql"));
+        props.put("spring.jpa.open-in-view", env.getProperty("spring.jpa.open-in-view"));
+        props.put("hibernate.proc.param_null_passing", env.getProperty("spring.jpa.properties.hibernate.proc.param_null_passing"));
 
         return props;
     }
