@@ -1,5 +1,9 @@
 package com.harrish.datasourcereadreplica.config;
 
+import com.harrish.datasourcereadreplica.util.logging.InlineQueryLogEntryCreator;
+import net.ttddyy.dsproxy.listener.logging.SLF4JLogLevel;
+import net.ttddyy.dsproxy.listener.logging.SLF4JQueryLoggingListener;
+import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder;
@@ -30,7 +34,18 @@ public class ReadOnlyDataSourceConfig {
 
     @Bean
     public DataSource readDataSource() {
-        return hikariCPService.getHikariDataSource(url);
+        //return hikariCPService.getHikariDataSource(url);
+
+        var loggingListener = new SLF4JQueryLoggingListener();
+        loggingListener.setQueryLogEntryCreator(new InlineQueryLogEntryCreator());
+
+        var dataSource = hikariCPService.getHikariDataSource(url);
+        return ProxyDataSourceBuilder
+                .create(dataSource)
+                .name("readDataSource")
+                .logQueryBySlf4j(SLF4JLogLevel.INFO)
+                .listener(loggingListener)
+                .build();
     }
 
     @Bean
